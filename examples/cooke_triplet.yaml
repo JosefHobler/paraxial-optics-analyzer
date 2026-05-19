@@ -1,0 +1,17 @@
+name: Cooke triplet style example
+wavelength_um: 0.5876
+units: mm
+
+object:
+  distance: .inf
+  height: 0.0
+
+surfaces:
+  - { radius:  21.25, thickness:  4.00, n: 1.6116, semi_diameter: 8.0 }
+  - { radius: -158.65, thickness:  7.76, n: 1.0,    semi_diameter: 8.0 }
+  - { radius: -20.25, thickness:  1.50, n: 1.6053, semi_diameter: 6.0 }
+  - { radius:  19.60, thickness:  4.90, n: 1.0,    semi_diameter: 6.0 }
+  - { radius: 141.25, thickness:  3.00, n: 1.6116, semi_diameter: 8.0 }
+  - { radius: -18.40, thickness: 45.00, n: 1.0,    semi_diameter: 8.0 }
+
+stop: 3

@@ -1,0 +1,13 @@
+name: Plano-convex singlet (BK7)
+wavelength_um: 0.5876  
+units: mm
+
+object:
+  distance: .inf
+  height: 0.0
+
+surfaces:
+  - { radius:  50.0, thickness:  5.0,  n: 1.5168, semi_diameter: 15.0 }  
+  - { radius:  .inf, thickness: 91.75, n: 1.0,    semi_diameter: 15.0 }  
+
+stop: 1
