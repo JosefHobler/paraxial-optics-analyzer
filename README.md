@@ -1,5 +1,7 @@
 # Paraxial Optics Analyzer
 
+[![CI](https://github.com/JosefHobler/paraxial-optics-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/JosefHobler/paraxial-optics-analyzer/actions/workflows/ci.yml)
+
 Scriptable sequential ray tracing & image-quality analysis for centered spherical lens systems — a tiny open-source Zemax-style tool.
 
 Two independent paraxial implementations (direct refraction-transfer trace + ABCD matrix) cross-validate against the thick-lens lensmaker equation. The real (non-paraxial) trace converges to the paraxial prediction in the small-aperture limit at ~1e-9.
@@ -97,6 +99,16 @@ examples:
 ```
 
 Exit codes: `0` ok, `2` bad input (prescription / args), `3` ray-trace failure (TIR, total vignetting, chief-ray failure). The CLI prints a one-line `error: ...` to stderr with a hint pointing at `--field-angle-deg` or aperture size — failures don't drop a traceback.
+
+## Continuous integration
+
+Every push and pull request kicks off [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Three jobs run in parallel where possible:
+
+- **lint** — `ruff check src tests`
+- **tests** — full pytest suite on Python 3.10, 3.11, and 3.12, followed by `analyze validate` so the physics cross-checks (lensmaker ↔ paraxial trace ↔ ABCD matrix, real trace → paraxial focus in the small-aperture limit) must hold at the project thresholds. If anyone tweaks the numerics and drifts past ~1e-9, CI goes red.
+- **build wheel** — gates on lint + tests; builds `sdist` and `wheel`, smoke-tests the wheel in a clean venv (`analyze --version`, `analyze validate`), and uploads `dist/` as a downloadable artefact.
+
+Concurrent runs on the same branch are cancelled automatically so only the latest commit's status counts.
 
 ## What's in the box
 
