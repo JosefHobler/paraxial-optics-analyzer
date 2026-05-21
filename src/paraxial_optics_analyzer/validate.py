@@ -1,14 +1,16 @@
 """Self-checks the user can run from the CLI. Each one is a tiny end-to-end
-physics validation, not just a unit test."""
+physics validation, not just a unit test.
+
+Prescriptions are constructed inline rather than loaded from disk, so these
+checks work the same way for editable installs and wheel installs.
+"""
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from pathlib import Path
 
 import numpy as np
 
-from paraxial_optics_analyzer.io import load_prescription
 from paraxial_optics_analyzer.paraxial import (
     efl_from_matrix,
     lensmaker_thick,
@@ -48,6 +50,25 @@ def _bk7_singlet(*, semi_d: float = 12.0) -> Prescription:
             Surface(radius=_BK7_R2, thickness=100.0, n=1.0, semi_diameter=semi_d),
         ),
         stop=1,
+    )
+
+
+def _cooke_triplet() -> Prescription:
+    """Cooke-style triplet — mirrors examples/cooke_triplet.yaml."""
+    return Prescription(
+        name="cooke-triplet",
+        wavelength_um=0.5876,
+        units="mm",
+        obj=ObjectSpec(distance=math.inf),
+        surfaces=(
+            Surface(radius=  21.25, thickness= 4.00, n=1.6116, semi_diameter=8.0),
+            Surface(radius=-158.65, thickness= 7.76, n=1.0,    semi_diameter=8.0),
+            Surface(radius= -20.25, thickness= 1.50, n=1.6053, semi_diameter=6.0),
+            Surface(radius=  19.60, thickness= 4.90, n=1.0,    semi_diameter=6.0),
+            Surface(radius= 141.25, thickness= 3.00, n=1.6116, semi_diameter=8.0),
+            Surface(radius= -18.40, thickness=45.00, n=1.0,    semi_diameter=8.0),
+        ),
+        stop=3,
     )
 
 
@@ -99,8 +120,7 @@ def check_cooke_triplet(threshold: float = 1e-10) -> CheckResult:
     Two independent code paths over a multi-element system — a stronger
     cross-check than the singlet ones above.
     """
-    path = Path(__file__).resolve().parents[2] / "examples" / "cooke_triplet.yaml"
-    pre = load_prescription(path)
+    pre = _cooke_triplet()
     f_trace = trace_paraxial(pre).efl
     f_matrix = efl_from_matrix(pre)
     rel = abs(f_trace - f_matrix) / abs(f_matrix)
