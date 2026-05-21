@@ -10,7 +10,6 @@ import pytest
 from paraxial_optics_analyzer.io import load_prescription, prescription_from_dict
 from paraxial_optics_analyzer.prescription import PrescriptionError
 
-
 SINGLET_YAML = textwrap.dedent("""\
     name: Singlet BK7
     wavelength_um: 0.5876

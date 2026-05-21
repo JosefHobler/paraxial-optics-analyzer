@@ -32,6 +32,7 @@ dependencies = [
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "ruff>=0.4",
 ]
 
 [project.scripts]
@@ -44,3 +45,18 @@ where = ["src"]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
 pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["*.egg-info", "build", "dist", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = [
+    "E741",  # ambiguous variable names — optics math uses single-letter symbols (P, C, D, R, ...)
+    "E501",  # line length — handled by formatter rather than as a hard error
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]

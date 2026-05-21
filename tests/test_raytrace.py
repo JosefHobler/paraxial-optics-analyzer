@@ -29,8 +29,6 @@ from paraxial_optics_analyzer.raytrace import (
 )
 
 
-
-
 class TestIntersectSphere:
     def test_axial_ray_hits_vertex(self):
         # Ray on the optical axis hits a convex surface at its vertex

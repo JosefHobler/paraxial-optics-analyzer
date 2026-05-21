@@ -96,12 +96,10 @@ class TestImageDistance:
         and focal length f, the Gaussian equation holds exactly. We approximate
         a thin lens by using a very small physical thickness.
         """
-        f = 96.749  # approximate, will be measured from the trace
         thin = _singlet(50.0, math.inf, 1.5168, 1e-6, obj_distance=300.0)
         r = trace_paraxial(thin)
         s = 300.0
         sprime = r.image_distance
-        # 1/s + 1/s' = 1/f
         f_implied = 1.0 / (1.0 / s + 1.0 / sprime)
         assert f_implied == pytest.approx(r.efl, rel=1e-6)
 

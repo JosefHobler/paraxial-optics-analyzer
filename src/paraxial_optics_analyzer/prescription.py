@@ -58,7 +58,7 @@ class Prescription:
     units: str
     obj: ObjectSpec
     surfaces: tuple[Surface, ...]
-    stop: int 
+    stop: int
 
     def __post_init__(self) -> None:
         if not isinstance(self.name, str) or not self.name:

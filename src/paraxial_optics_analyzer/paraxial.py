@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from paraxial_optics_analyzer.prescription import Prescription, Surface
 
-
 N_OBJ = 1.0
 
 

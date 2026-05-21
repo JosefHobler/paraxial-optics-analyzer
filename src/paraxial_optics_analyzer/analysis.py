@@ -39,7 +39,7 @@ def spot_diagram(
 
     pts: list[np.ndarray] = []
     n_failed = 0
-    for P, d in zip(positions, directions):
+    for P, d in zip(positions, directions, strict=True):
         try:
             r = trace_system(P, d, pre, image_plane_offset=image_plane_offset)
             pts.append(r.image_point[:2])
@@ -98,7 +98,7 @@ def ray_fan(
     chief_xy = chief.image_point[:2]
 
     tv = np.full(n_samples, math.nan)
-    for i, (P, d) in enumerate(zip(positions, directions)):
+    for i, (P, d) in enumerate(zip(positions, directions, strict=True)):
         try:
             r = trace_system(P, d, pre, image_plane_offset=image_plane_offset)
             tv[i] = r.image_point[comp] - chief_xy[comp]

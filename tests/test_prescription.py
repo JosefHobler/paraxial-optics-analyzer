@@ -1,6 +1,7 @@
 """Unit tests for the prescription data model and its validation."""
 from __future__ import annotations
 
+import dataclasses
 import math
 
 import pytest
@@ -83,7 +84,7 @@ class TestSurface:
 
     def test_frozen(self):
         s = _ok_surface()
-        with pytest.raises(Exception):
+        with pytest.raises(dataclasses.FrozenInstanceError):
             s.radius = 99.0  # type: ignore[misc]
 
 

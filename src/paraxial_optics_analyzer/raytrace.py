@@ -8,7 +8,6 @@ import numpy as np
 
 from paraxial_optics_analyzer.prescription import Prescription
 
-
 N_OBJ = 1.0
 
 

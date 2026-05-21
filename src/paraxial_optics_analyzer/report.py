@@ -72,7 +72,8 @@ def _spot_panel(ax, spot) -> None:
         ax.scatter(pts[:, 0], pts[:, 1], s=12, color="#1f77b4", alpha=0.85)
         ax.scatter([spot.centroid[0]], [spot.centroid[1]], s=45, marker="+", color="#d62728")
     ax.set_title(f"Spot diagram, RMS={spot.rms:.4g}")
-    ax.set_xlabel("x"); ax.set_ylabel("y")
+    ax.set_xlabel("x")
+    ax.set_ylabel("y")
     ax.grid(True, alpha=0.3)
     ax.set_aspect("equal", adjustable="datalim")
 
