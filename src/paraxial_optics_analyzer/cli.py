@@ -9,6 +9,8 @@ from pathlib import Path
 from paraxial_optics_analyzer.analysis import find_best_focus, spot_diagram
 from paraxial_optics_analyzer.io import load_prescription
 from paraxial_optics_analyzer.paraxial import trace_paraxial
+from paraxial_optics_analyzer.prescription import PrescriptionError
+from paraxial_optics_analyzer.raytrace import TraceError
 from paraxial_optics_analyzer.report import write_report
 
 
@@ -29,15 +31,36 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _fail(msg: str, *, hint: str | None = None, code: int = 1) -> int:
+    print(f"error: {msg}", file=sys.stderr)
+    if hint:
+        print(f"  hint: {hint}", file=sys.stderr)
+    return code
+
+
+_TRACE_HINT = "try lowering --field-angle-deg or widening the aperture (semi_diameter)"
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     path = Path(args.prescription)
-    pre = load_prescription(path)
     fa = math.radians(args.field_angle_deg)
 
-    para = trace_paraxial(pre)
-    spot = spot_diagram(pre, field_angle_rad=fa, n_rings=args.rings)
-    best = find_best_focus(pre, field_angle_rad=fa, n_rings=args.rings)
+    try:
+        pre = load_prescription(path)
+    except PrescriptionError as e:
+        return _fail(str(e), code=2)
+
+    try:
+        para = trace_paraxial(pre)
+        spot = spot_diagram(pre, field_angle_rad=fa, n_rings=args.rings)
+        if spot.n_failed and len(spot.points) == 0:
+            raise TraceError("every sampled ray missed an aperture or hit TIR")
+        best = find_best_focus(pre, field_angle_rad=fa, n_rings=args.rings)
+    except TraceError as e:
+        return _fail(f"ray trace failed — {e}", hint=_TRACE_HINT, code=3)
+    except ValueError as e:
+        return _fail(str(e), hint=_TRACE_HINT, code=2)
 
     u = pre.units
     print(f"{pre.name}")
@@ -53,7 +76,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.no_report:
         out = Path(args.output) if args.output else path.with_name(f"{path.stem}_report.pdf")
-        report_path = write_report(pre, out, field_angle_deg=args.field_angle_deg, n_rings=args.rings)
+        try:
+            report_path = write_report(pre, out, field_angle_deg=args.field_angle_deg, n_rings=args.rings)
+        except TraceError as e:
+            return _fail(f"could not render report — {e}", hint=_TRACE_HINT, code=3)
         print(f"  report: {report_path}")
 
     return 0
