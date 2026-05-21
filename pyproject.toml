@@ -3,9 +3,9 @@ requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "optical-design-analyzer"
+name = "paraxial-optics-analyzer"
 version = "0.1.0"
-description = "Scriptable sequential ray tracing and image-quality analysis - a tiny open-source Zemax-style tool."
+description = "Scriptable sequential ray tracing and image-quality analysis — a tiny open-source Zemax-style tool."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

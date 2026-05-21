@@ -49,15 +49,21 @@ class TestFormatLine:
 
 
 class TestCli:
-    @pytest.mark.parametrize("argv", [["--validate"], ["validate"]])
-    def test_validate_invocations(self, argv, capsys):
-        rc = main(argv)
+    def test_validate_subcommand(self, capsys):
+        rc = main(["validate"])
         out = capsys.readouterr().out
         assert rc == 0
         assert "Lensmaker validation: PASS" in out
         assert "Paraxial-limit validation: PASS" in out
         assert "Cooke triplet EFL check: PASS" in out
 
-    def test_missing_prescription_without_validate(self, capsys):
+    def test_no_subcommand_errors(self):
         with pytest.raises(SystemExit):
-            main([])  # no prescription, no --validate -> argparse error
+            main([])  # argparse: a subcommand is required
+
+    def test_version_flag(self, capsys):
+        with pytest.raises(SystemExit) as exc:
+            main(["--version"])
+        assert exc.value.code == 0
+        out = capsys.readouterr().out
+        assert "analyze" in out

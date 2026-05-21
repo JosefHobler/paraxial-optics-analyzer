@@ -7,7 +7,7 @@
 #   make install    editable install with dev deps
 #   make clean      drop build / cache artefacts
 
-PYTHON  ?= python
+PYTHON := .venv/Scripts/python
 EXAMPLE ?= examples/singlet_bk7.yaml
 REPORT  ?= singlet_report.pdf
 
@@ -24,19 +24,19 @@ test:
 
 demo:
 	@echo ">>> Running analysis on $(EXAMPLE)"
-	$(PYTHON) -m paraxial_optics_analyzer.cli $(EXAMPLE) --no-report --rings 4
+	$(PYTHON) -m paraxial_optics_analyzer.cli info $(EXAMPLE) --rings 4
 	@echo ""
 	@echo ">>> Built-in self-checks"
-	$(PYTHON) -m paraxial_optics_analyzer.cli --validate
+	$(PYTHON) -m paraxial_optics_analyzer.cli validate
 
 report:
-	$(PYTHON) -m paraxial_optics_analyzer.cli $(EXAMPLE) -o $(REPORT)
+	$(PYTHON) -m paraxial_optics_analyzer.cli report $(EXAMPLE) -o $(REPORT)
 
 lint:
 	$(PYTHON) -m ruff check src tests
 
 validate:
-	$(PYTHON) -m paraxial_optics_analyzer.cli --validate
+	$(PYTHON) -m paraxial_optics_analyzer.cli validate
 
 clean:
 	$(PYTHON) -c "import pathlib, shutil; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('*.egg-info')]; [shutil.rmtree(p, ignore_errors=True) for p in ['.pytest_cache', '.ruff_cache', 'build', 'dist']]"
