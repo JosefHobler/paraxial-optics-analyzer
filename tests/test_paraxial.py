@@ -12,6 +12,7 @@ import math
 
 import pytest
 
+from paraxial_optics_analyzer.io import load_prescription
 from paraxial_optics_analyzer.paraxial import (
     bfl_from_matrix,
     efl_from_matrix,
@@ -111,6 +112,13 @@ class TestFNumber:
         r = trace_paraxial(pre)
         expected = r.efl / 24.0
         assert r.f_number == pytest.approx(expected, rel=1e-12)
+
+    def test_f_number_for_internal_stop_uses_entrance_pupil(self):
+        pre = load_prescription("examples/singlet_bk7.yaml")
+        r = trace_paraxial(pre)
+        entrance_pupil_radius = 8.856807495055554
+
+        assert r.f_number == pytest.approx(r.efl / (2.0 * entrance_pupil_radius), rel=1e-12)
 
 
 class TestSystemMatrix:

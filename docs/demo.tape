@@ -20,7 +20,7 @@ Set TypingSpeed 40ms
 Set PlaybackSpeed 1.0
 
 # Peek at the prescription
-Type "cat examples/cooke_triplet.yaml"
+Type "cat examples/singlet_bk7.yaml"
 Enter
 Sleep 2500ms
 
@@ -29,7 +29,7 @@ Enter
 Sleep 200ms
 
 # Headline numbers at 5° off-axis
-Type "analyze info examples/cooke_triplet.yaml --field-angle-deg 5 --rings 4"
+Type "analyze info examples/singlet_bk7.yaml --field-angle-deg 5 --rings 4"
 Enter
 Sleep 3500ms
 
@@ -39,6 +39,6 @@ Enter
 Sleep 3500ms
 
 # And the 4-panel report drops on disk
-Type "analyze report examples/cooke_triplet.yaml -o cooke.pdf"
+Type "analyze report examples/singlet_bk7.yaml -o cooke.pdf"
 Enter
 Sleep 2500ms

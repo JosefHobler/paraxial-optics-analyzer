@@ -22,8 +22,8 @@ _DESCRIPTION = (
 _EPILOG = """\
 examples:
   analyze info examples/singlet_bk7.yaml
-  analyze info examples/cooke_triplet.yaml --field-angle-deg 5
-  analyze report examples/cooke_triplet.yaml -o cooke.pdf
+  analyze info examples/singlet_bk7.yaml --field-angle-deg 5
+  analyze report examples/singlet_bk7.yaml -o cooke.pdf
   analyze validate
 
 run `analyze <command> --help` for command-specific options.

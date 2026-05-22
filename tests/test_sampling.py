@@ -6,10 +6,12 @@ import math
 import numpy as np
 import pytest
 
+from paraxial_optics_analyzer.io import load_prescription
 from paraxial_optics_analyzer.sampling import (
     hexapolar_pupil,
     launch_parallel,
     linear_pupil,
+    pupil_radius_of,
 )
 
 
@@ -84,3 +86,10 @@ class TestLaunchParallel:
     def test_field_angle_too_large(self):
         with pytest.raises(ValueError, match="field angle too large"):
             launch_parallel(np.array([[0.0, 0.0]]), field_angle_rad=math.pi / 2)
+
+
+class TestEntrancePupil:
+    def test_internal_stop_is_imaged_by_front_group(self):
+        pre = load_prescription("examples/singlet_bk7.yaml")
+
+        assert pupil_radius_of(pre) == pytest.approx(8.856807495055554, rel=1e-12)

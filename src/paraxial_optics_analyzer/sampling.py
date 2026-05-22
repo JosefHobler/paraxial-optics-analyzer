@@ -41,9 +41,28 @@ def linear_pupil(n_samples: int, pupil_radius: float, axis: str = "y") -> np.nda
 
 
 def pupil_radius_of(pre: Prescription) -> float:
-    """Stop semi-diameter as the entrance pupil radius. Exact only when stop
-    is surface 1 — deeper stops need pupil imaging (not implemented)."""
-    return pre.surfaces[pre.stop - 1].semi_diameter
+    """Entrance-pupil semi-diameter for a collimated axial bundle.
+
+    The stop semi-diameter is only the entrance-pupil radius when the stop is
+    the first surface. For an internal stop, trace a unit-height paraxial ray
+    through the surfaces before the stop and scale the input height so the ray
+    lands on the stop edge.
+    """
+    scale = _height_at_stop_for_unit_input(pre)
+    if scale == 0.0:
+        return math.inf
+    return pre.surfaces[pre.stop - 1].semi_diameter / abs(scale)
+
+
+def _height_at_stop_for_unit_input(pre: Prescription) -> float:
+    y, u = 1.0, 0.0
+    n_before = 1.0
+    for surf in pre.surfaces[:pre.stop - 1]:
+        power = 0.0 if math.isinf(surf.radius) else (surf.n - n_before) / surf.radius
+        u = (n_before * u - y * power) / surf.n
+        y += surf.thickness * u
+        n_before = surf.n
+    return y
 
 
 def launch_parallel(

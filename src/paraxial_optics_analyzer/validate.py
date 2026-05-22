@@ -54,7 +54,7 @@ def _bk7_singlet(*, semi_d: float = 12.0) -> Prescription:
 
 
 def _cooke_triplet() -> Prescription:
-    """Cooke-style triplet — mirrors examples/cooke_triplet.yaml."""
+    """Cooke-style triplet — mirrors examples/singlet_bk7.yaml."""
     return Prescription(
         name="cooke-triplet",
         wavelength_um=0.5876,

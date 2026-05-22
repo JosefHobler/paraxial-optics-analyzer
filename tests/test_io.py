@@ -41,11 +41,12 @@ def test_load_singlet_from_file(tmp_path: Path):
     assert pre.stop == 1
 
 
-def test_load_real_singlet_example():
+def test_load_real_cooke_example():
     here = Path(__file__).resolve().parents[1] / "examples" / "singlet_bk7.yaml"
     pre = load_prescription(here)
-    assert pre.n_surfaces == 2
+    assert pre.n_surfaces == 6
     assert math.isinf(pre.obj.distance)
+    assert pre.stop == 3
 
 
 def test_missing_top_level_keys():

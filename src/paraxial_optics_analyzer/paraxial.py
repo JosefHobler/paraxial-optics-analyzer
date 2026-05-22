@@ -5,6 +5,7 @@ import math
 from dataclasses import dataclass
 
 from paraxial_optics_analyzer.prescription import Prescription, Surface
+from paraxial_optics_analyzer.sampling import pupil_radius_of
 
 N_OBJ = 1.0
 
@@ -36,8 +37,7 @@ def trace_paraxial(pre: Prescription) -> ParaxialResult:
     else:
         s_img = _image_distance_finite_conjugate(pre)
 
-    stop = pre.surfaces[pre.stop - 1]
-    D_pupil = 2.0 * stop.semi_diameter
+    D_pupil = 2.0 * pupil_radius_of(pre)
     fno = abs(efl) / D_pupil if (D_pupil > 0.0 and math.isfinite(efl)) else math.inf
 
     return ParaxialResult(efl, bfl, s_img, fno, n_last)

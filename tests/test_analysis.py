@@ -11,6 +11,7 @@ from paraxial_optics_analyzer.analysis import (
     ray_fan,
     spot_diagram,
 )
+from paraxial_optics_analyzer.io import load_prescription
 from paraxial_optics_analyzer.paraxial import trace_paraxial
 from paraxial_optics_analyzer.prescription import (
     ObjectSpec,
@@ -99,6 +100,17 @@ class TestBestFocus:
         result = find_best_focus(pre, n_rings=4, search_range=(para_offset - 1.0, para_offset + 1.0))
         # Best focus should be within a small distance of paraxial focus for a thin pupil
         assert abs(result.image_plane_offset - para_offset) < 0.1
+
+    def test_default_search_does_not_miss_cooke_paraxial_focus(self):
+        pre = load_prescription("examples/singlet_bk7.yaml")
+        para_offset = _paraxial_focus_offset(pre)
+        paraxial = spot_diagram(pre, n_rings=4, image_plane_offset=para_offset)
+
+        result = find_best_focus(pre, n_rings=4)
+
+        assert result.rms_at_best <= paraxial.rms
+        assert result.rms_at_best <= result.rms_at_nominal
+        assert abs(result.image_plane_offset - para_offset) < 0.75
 
 
 class TestSphericalAberrationConvergence:

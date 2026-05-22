@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
@@ -33,7 +34,7 @@ def spot_diagram(
     n_rings: int = 16,
     image_plane_offset: float = 0.0,
 ) -> SpotDiagram:
-    """Hex-sampled bundle from infinity -> image-plane spot statistics."""
+    """Hex-sampled bundle from infinity to image-plane spot statistics."""
     pupil = hexapolar_pupil(n_rings, pupil_radius_of(pre))
     positions, directions = launch_parallel(pupil, field_angle_rad, "y")
 
@@ -123,39 +124,100 @@ def find_best_focus(
     search_range: tuple[float, float] | None = None,
     tol: float = 1e-7,
 ) -> BestFocusResult:
-    """Golden-section search for the image-plane offset minimizing RMS spot.
+    """Search for the image-plane offset minimizing RMS spot.
 
-    Default search range is ±10% of the paraxial EFL.
+    Default search range is +/-10% of the paraxial EFL around the paraxial
+    focus, not around the nominal image plane. A coarse grid brackets the best
+    local basin before golden-section polishing, so narrow minima near paraxial
+    focus are not discarded by the unimodality assumption.
     """
-    if search_range is None:
-        from paraxial_optics_analyzer.paraxial import trace_paraxial  # avoid cycle
-        para = trace_paraxial(pre)
-        margin = max(1.0, 0.1 * abs(para.efl))
-        search_range = (-margin, margin)
+    from paraxial_optics_analyzer.paraxial import trace_paraxial  # avoid cycle
 
-    def rms_at(off: float) -> float:
-        return spot_diagram(pre, field_angle_rad, n_rings=n_rings, image_plane_offset=off).rms
+    para = trace_paraxial(pre)
+    paraxial_offset = _paraxial_focus_offset(pre, para.image_distance)
+
+    if search_range is None:
+        margin = max(1.0, 0.1 * abs(para.efl))
+        search_range = (paraxial_offset - margin, paraxial_offset + margin)
 
     a, b = search_range
     if b <= a:
         raise ValueError(f"search_range must be increasing, got ({a}, {b})")
 
+    rms_cache: dict[float, float] = {}
+
+    def rms_at(off: float) -> float:
+        if off not in rms_cache:
+            rms_cache[off] = spot_diagram(
+                pre, field_angle_rad, n_rings=n_rings, image_plane_offset=off,
+            ).rms
+        return rms_cache[off]
+
+    grid = np.linspace(a, b, 81)
+    grid_rms = np.array([rms_at(float(off)) for off in grid])
+    finite = np.isfinite(grid_rms)
+    if not finite.any():
+        raise TraceError("no valid rays in best-focus search range")
+
+    finite_indices = np.flatnonzero(finite)
+    best_grid_index = int(finite_indices[np.argmin(grid_rms[finite])])
+
+    candidates: list[tuple[float, float]] = [
+        (float(grid[best_grid_index]), float(grid_rms[best_grid_index])),
+        (paraxial_offset, rms_at(paraxial_offset)),
+        (0.0, rms_at(0.0)),
+    ]
+
+    if 0 < best_grid_index < len(grid) - 1:
+        candidates.append(
+            _golden_section_minimize(
+                rms_at,
+                float(grid[best_grid_index - 1]),
+                float(grid[best_grid_index + 1]),
+                tol,
+            )
+        )
+
+    best_off, best_rms = min(
+        ((off, rms) for off, rms in candidates if math.isfinite(rms)),
+        key=lambda item: item[1],
+    )
+
+    return BestFocusResult(
+        image_plane_offset=best_off,
+        rms_at_best=best_rms,
+        rms_at_nominal=rms_at(0.0),
+    )
+
+
+def _paraxial_focus_offset(pre: Prescription, image_distance: float) -> float:
+    from paraxial_optics_analyzer.raytrace import image_plane_z
+
+    z_nominal = image_plane_z(pre)
+    z_last = z_nominal - pre.surfaces[-1].thickness
+    return (z_last + image_distance) - z_nominal
+
+
+def _golden_section_minimize(
+    func: Callable[[float], float],
+    a: float,
+    b: float,
+    tol: float,
+) -> tuple[float, float]:
     phi = (math.sqrt(5.0) - 1.0) / 2.0
     c = b - phi * (b - a)
     d = a + phi * (b - a)
-    f_c, f_d = rms_at(c), rms_at(d)
+    f_c, f_d = func(c), func(d)
     while (b - a) > tol:
         if f_c < f_d:
             b, d, f_d = d, c, f_c
             c = b - phi * (b - a)
-            f_c = rms_at(c)
+            f_c = func(c)
         else:
             a, c, f_c = c, d, f_d
             d = a + phi * (b - a)
-            f_d = rms_at(d)
+            f_d = func(d)
 
-    return BestFocusResult(
-        image_plane_offset=0.5 * (a + b),
-        rms_at_best=min(f_c, f_d),
-        rms_at_nominal=rms_at(0.0),
-    )
+    if f_c <= f_d:
+        return c, f_c
+    return d, f_d
