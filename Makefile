@@ -24,7 +24,7 @@ test:
 
 demo:
 	@echo ">>> Running analysis on $(EXAMPLE)"
-	$(PYTHON) -m paraxial_optics_analyzer.cli info $(EXAMPLE) --rings 4
+	$(PYTHON) -m paraxial_optics_analyzer.cli info $(EXAMPLE)
 	@echo ""
 	@echo ">>> Built-in self-checks"
 	$(PYTHON) -m paraxial_optics_analyzer.cli validate

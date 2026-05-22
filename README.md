@@ -48,15 +48,22 @@ Plano-convex singlet (BK7)
   BFL: 93.4528125041 mm
   image distance: 93.4528125041 mm
   f-number: f/3.22497
-  nominal RMS spot: 0.101376806029 mm
-  best-focus offset: -0.418181032053 mm
-  best-focus RMS spot: 0.0866224230684 mm
+
+  nominal image plane z:  96.75 mm
+  paraxial focus z:       98.4528 mm   (shift from nominal: +1.703 mm)
+  best-focus z:           96.6124 mm   (shift from paraxial: -1.84 mm)
+
+  RMS spot at nominal:     0.0769657 mm
+  RMS spot at paraxial:    0.227151 mm
+  RMS spot at best focus:  0.0752805 mm
 
 >>> Built-in self-checks
 Lensmaker validation: PASS, relative error < 1e-15
 Paraxial-limit validation: PASS, max deviation 1.2e-13
 Cooke triplet EFL check: PASS, relative error 3.9e-16
 ```
+
+The three explicit `z` lines remove any ambiguity about what "best-focus shift" is measured against. RMS spots are reported at all three reference planes so the third-order-SA identities (`RMS_paraxial ≈ |TA_max|/2`, `RMS_best ≈ |TA_max|/6`, `shift ≈ −(2/3)·LSA`) line up with what you'd compute by hand — see [`tests/test_analysis.py::TestSphericalAberrationConvergence`](tests/test_analysis.py).
 
 ## CLI
 

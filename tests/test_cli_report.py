@@ -14,7 +14,11 @@ def test_cli_info_numeric_output(capsys):
     assert rc == 0
     assert "Plano-convex singlet" in out
     assert "EFL:" in out
-    assert "best-focus RMS spot:" in out
+    # The three explicit z-planes that disambiguate "best-focus offset"
+    assert "nominal image plane z:" in out
+    assert "paraxial focus z:" in out
+    assert "best-focus z:" in out
+    assert "RMS spot at best focus:" in out
 
 
 def test_cli_report_writes_pdf(tmp_path: Path, capsys):

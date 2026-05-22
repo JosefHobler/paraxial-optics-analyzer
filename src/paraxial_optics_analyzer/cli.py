@@ -11,7 +11,7 @@ from paraxial_optics_analyzer.analysis import find_best_focus, spot_diagram
 from paraxial_optics_analyzer.io import load_prescription
 from paraxial_optics_analyzer.paraxial import trace_paraxial
 from paraxial_optics_analyzer.prescription import Prescription, PrescriptionError
-from paraxial_optics_analyzer.raytrace import TraceError
+from paraxial_optics_analyzer.raytrace import TraceError, image_plane_z
 from paraxial_optics_analyzer.report import write_report
 from paraxial_optics_analyzer.validate import run_all as run_validation
 
@@ -98,8 +98,8 @@ def _add_analysis_args(p: argparse.ArgumentParser) -> None:
         help="field angle in degrees (default: %(default)s)",
     )
     p.add_argument(
-        "--rings", metavar="N", type=int, default=6,
-        help="hexapolar pupil rings (default: %(default)s)",
+        "--rings", metavar="N", type=int, default=16,
+        help="hexapolar pupil rings (default: %(default)s; lower = faster, higher = better RMS convergence)",
     )
 
 
@@ -131,8 +131,8 @@ def _cmd_info(args: argparse.Namespace) -> int:
     fa = math.radians(args.field_angle_deg)
     try:
         para = trace_paraxial(pre)
-        spot = spot_diagram(pre, field_angle_rad=fa, n_rings=args.rings)
-        if spot.n_failed and len(spot.points) == 0:
+        spot_nom = spot_diagram(pre, field_angle_rad=fa, n_rings=args.rings)
+        if spot_nom.n_failed and len(spot_nom.points) == 0:
             raise TraceError("every sampled ray missed an aperture or hit TIR")
         best = find_best_focus(pre, field_angle_rad=fa, n_rings=args.rings)
     except TraceError as e:
@@ -140,17 +140,40 @@ def _cmd_info(args: argparse.Namespace) -> int:
     except ValueError as e:
         return _fail(str(e), hint=_TRACE_HINT, code=2)
 
+    # Three reference planes along z:
+    #   nominal  — image plane defined by the YAML (sum of surface thicknesses)
+    #   paraxial — last-surface vertex + paraxial image distance
+    #   best    — minimum-RMS plane found by the search
+    z_nominal = image_plane_z(pre)
+    z_last = z_nominal - pre.surfaces[-1].thickness
+    z_paraxial = z_last + para.image_distance
+    z_best = z_nominal + best.image_plane_offset
+
+    # RMS at each plane (use the same sampling density as everything else for
+    # consistency in the report).
+    spot_par = spot_diagram(
+        pre, field_angle_rad=fa, n_rings=args.rings,
+        image_plane_offset=z_paraxial - z_nominal,
+    )
+
     u = pre.units
     print(f"{pre.name}")
     print(f"  EFL: {para.efl:.12g} {u}")
     print(f"  BFL: {para.bfl:.12g} {u}")
     print(f"  image distance: {para.image_distance:.12g} {u}")
     print(f"  f-number: f/{para.f_number:.6g}")
-    print(f"  nominal RMS spot: {spot.rms:.12g} {u}")
-    print(f"  best-focus offset: {best.image_plane_offset:.12g} {u}")
-    print(f"  best-focus RMS spot: {best.rms_at_best:.12g} {u}")
-    if spot.n_failed:
-        print(f"  failed rays: {spot.n_failed}", file=sys.stderr)
+    print()
+    print(f"  nominal image plane z:  {z_nominal:.6g} {u}")
+    print(f"  paraxial focus z:       {z_paraxial:.6g} {u}   "
+          f"(shift from nominal: {z_paraxial - z_nominal:+.4g} {u})")
+    print(f"  best-focus z:           {z_best:.6g} {u}   "
+          f"(shift from paraxial: {z_best - z_paraxial:+.4g} {u})")
+    print()
+    print(f"  RMS spot at nominal:     {spot_nom.rms:.6g} {u}")
+    print(f"  RMS spot at paraxial:    {spot_par.rms:.6g} {u}")
+    print(f"  RMS spot at best focus:  {best.rms_at_best:.6g} {u}")
+    if spot_nom.n_failed:
+        print(f"  failed rays: {spot_nom.n_failed}", file=sys.stderr)
     return 0
 
 

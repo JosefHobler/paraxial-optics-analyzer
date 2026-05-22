@@ -30,7 +30,7 @@ def spot_diagram(
     pre: Prescription,
     field_angle_rad: float = 0.0,
     *,
-    n_rings: int = 6,
+    n_rings: int = 16,
     image_plane_offset: float = 0.0,
 ) -> SpotDiagram:
     """Hex-sampled bundle from infinity -> image-plane spot statistics."""
@@ -119,7 +119,7 @@ def find_best_focus(
     pre: Prescription,
     field_angle_rad: float = 0.0,
     *,
-    n_rings: int = 6,
+    n_rings: int = 16,
     search_range: tuple[float, float] | None = None,
     tol: float = 1e-7,
 ) -> BestFocusResult:
