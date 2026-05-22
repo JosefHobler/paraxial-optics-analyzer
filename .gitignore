@@ -30,6 +30,11 @@ Thumbs.db
 # Tooling
 .claude/
 
-# Generated analysis reports
+# Generated analysis reports (default writes from `make report` etc.)
 *_report.pdf
 *_report.png
+# ...but the committed demo/hero assets under docs/ are NOT generated artefacts
+!docs/**/*.png
+!docs/**/*.gif
+!docs/**/*.mp4
+!docs/**/*.pdf
