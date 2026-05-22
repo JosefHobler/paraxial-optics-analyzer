@@ -102,7 +102,7 @@ class TestBestFocus:
         assert abs(result.image_plane_offset - para_offset) < 0.1
 
     def test_default_search_does_not_miss_cooke_paraxial_focus(self):
-        pre = load_prescription("examples/singlet_bk7.yaml")
+        pre = load_prescription("examples/cooke_triplet.yaml")
         para_offset = _paraxial_focus_offset(pre)
         paraxial = spot_diagram(pre, n_rings=4, image_plane_offset=para_offset)
 

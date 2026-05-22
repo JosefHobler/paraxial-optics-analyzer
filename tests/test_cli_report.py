@@ -12,7 +12,7 @@ def test_cli_info_numeric_output(capsys):
 
     out = capsys.readouterr().out
     assert rc == 0
-    assert "Cooke triplet style example" in out
+    assert "Plano-convex singlet" in out
     assert "EFL:" in out
     # The three explicit z-planes that disambiguate "best-focus offset"
     assert "nominal image plane z:" in out

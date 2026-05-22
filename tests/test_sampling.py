@@ -90,6 +90,6 @@ class TestLaunchParallel:
 
 class TestEntrancePupil:
     def test_internal_stop_is_imaged_by_front_group(self):
-        pre = load_prescription("examples/singlet_bk7.yaml")
+        pre = load_prescription("examples/cooke_triplet.yaml")
 
         assert pupil_radius_of(pre) == pytest.approx(8.856807495055554, rel=1e-12)

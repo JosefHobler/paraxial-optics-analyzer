@@ -114,7 +114,7 @@ class TestFNumber:
         assert r.f_number == pytest.approx(expected, rel=1e-12)
 
     def test_f_number_for_internal_stop_uses_entrance_pupil(self):
-        pre = load_prescription("examples/singlet_bk7.yaml")
+        pre = load_prescription("examples/cooke_triplet.yaml")
         r = trace_paraxial(pre)
         entrance_pupil_radius = 8.856807495055554
 

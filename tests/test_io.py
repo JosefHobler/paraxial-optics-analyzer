@@ -42,7 +42,7 @@ def test_load_singlet_from_file(tmp_path: Path):
 
 
 def test_load_real_cooke_example():
-    here = Path(__file__).resolve().parents[1] / "examples" / "singlet_bk7.yaml"
+    here = Path(__file__).resolve().parents[1] / "examples" / "cooke_triplet.yaml"
     pre = load_prescription(here)
     assert pre.n_surfaces == 6
     assert math.isinf(pre.obj.distance)
