@@ -319,18 +319,6 @@ Each surface requires:
 - `n`: refractive index of the medium after the surface. Must be finite and `>= 1`.
 - `semi_diameter`: clear-aperture half-width. Must be finite and `> 0`.
 
-Infinity tokens accepted by the YAML loader:
-
-- `.inf`
-- `+.inf`
-- `inf`
-- `+inf`
-- `infinity`
-- `+infinity`
-- `-.inf`
-- `-inf`
-- `-infinity`
-
 Bundled examples:
 
 - `examples/singlet_bk7.yaml`
