@@ -18,7 +18,7 @@ _DESCRIPTION = (
     "Paraxial optics analyzer (sequential ray tracing for centered lens systems)"
 )
 
-_EPILOG = """\ 
+_EPILOG = """\
 examples:
   analyze info examples/singlet_bk7.yaml
   analyze info examples/singlet_bk7.yaml --field-angle-deg 5

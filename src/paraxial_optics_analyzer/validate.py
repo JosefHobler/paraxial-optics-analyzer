@@ -11,7 +11,7 @@ from paraxial_optics_analyzer.paraxial import (
     trace_paraxial,
 )
 from paraxial_optics_analyzer.prescription import ObjectSpec, Prescription, Surface
-from paraxial_optics_analyzer.raytrace impo rt image_plane_z, trace_system
+from paraxial_optics_analyzer.raytrace import image_plane_z, trace_system
 
 _BK7_R1 = 50.0
 _BK7_R2 = math.inf
