@@ -502,42 +502,6 @@ The Makefile is Windows-venv flavored and uses `.venv/Scripts/python`. Windows d
 
 Generated stuff such as `build/`, `dist/`, `*.egg-info`, `__pycache__/`, `.pytest_cache/`, and `.ruff_cache/` is not part of the source. The Makefile has a `clean` target for most of that.
 
-## Packaging
-
-Build backend:
-
-```text
-setuptools.build_meta
-```
-
-Build command:
-
-```bash
-python -m build
-```
-
-Project metadata is in `pyproject.toml`.
-
-The package name is:
-
-```text
-paraxial-optics-analyzer
-```
-
-The import package is:
-
-```python
-paraxial_optics_analyzer
-```
-
-The console script is:
-
-```text
-analyze
-```
-
-Current build emits setuptools deprecation warnings for the old license table / classifier style. The build still succeeds. This should be cleaned up before setuptools starts enforcing the new license metadata rules.
-
 ## Bugs Caught During Validation
 
 Internal stop f-number:
