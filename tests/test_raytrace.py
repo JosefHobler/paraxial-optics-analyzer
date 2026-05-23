@@ -1,4 +1,4 @@
-"""Tests for vector ray tracing primitives and full-system trace.
+"""Tests for vector ray tracing primitives and full-system trace
 
 Validation strategy:
 1. Hand-checked single-surface intersections and Snell refraction
@@ -102,13 +102,6 @@ class TestRefract:
         assert 1.0 * math.sin(theta_i) == pytest.approx(1.5 * sin_t, rel=1e-12)
 
     def test_time_reversal(self):
-        """Time-reversing the exit ray and refracting back recovers the (negated) incident ray.
-
-        For a forward refraction n1 -> n2 producing d_out, the time-reversed ray
-        starts at the same point going -d_out in the n2 medium. Refracting it
-        back through the surface (normal now pointing into n2, indices swapped)
-        must yield -d_in.
-        """
         theta_i = math.radians(25.0)
         d_in = np.array([math.sin(theta_i), 0.1, math.cos(theta_i)])
         d_in = d_in / float(np.linalg.norm(d_in))
@@ -153,12 +146,6 @@ class TestFullTrace:
         assert float(np.linalg.norm(r.image_point[:2])) < 1e-12
 
     def test_real_trace_converges_to_paraxial(self):
-        """In the small-aperture limit, the real trace meets the axis at the paraxial focus
-
-        Spherical aberration is third-order in pupil height, so the transverse
-        error at the paraxial image plane scales like y to the third power. With y = 1e-3 the
-        error is bounded well below 1e-9
-        """
         pre = _singlet(50.0, math.inf, 1.5168, 5.0, image_distance=91.75)
         paraxial = trace_paraxial(pre)
 

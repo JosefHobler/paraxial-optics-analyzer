@@ -1,4 +1,3 @@
-"""Pupil + field sampling -> ray launches"""
 from __future__ import annotations
 
 import math
@@ -9,7 +8,6 @@ from paraxial_optics_analyzer.prescription import Prescription
 
 
 def hexapolar_pupil(n_rings: int, pupil_radius: float) -> np.ndarray:
-    """Hexapolar sampling: centre + 6·r points on ring r. Count = 1 + 3·N·(N+1)."""
     if n_rings < 0:
         raise ValueError("n_rings must be >= 0")
     if pupil_radius <= 0.0:
@@ -26,7 +24,6 @@ def hexapolar_pupil(n_rings: int, pupil_radius: float) -> np.ndarray:
 
 
 def linear_pupil(n_samples: int, pupil_radius: float, axis: str = "y") -> np.ndarray:
-    """1D pupil sweep along one meridian. Returns (n_samples, 2) xy."""
     if n_samples < 2:
         raise ValueError("n_samples must be >= 2")
     if pupil_radius <= 0.0:
@@ -41,13 +38,6 @@ def linear_pupil(n_samples: int, pupil_radius: float, axis: str = "y") -> np.nda
 
 
 def pupil_radius_of(pre: Prescription) -> float:
-    """Entrance-pupil semi-diameter for a collimated axial bundle.
-
-    The stop semi-diameter is only the entrance-pupil radius when the stop is
-    the first surface. For an internal stop, trace a unit-height paraxial ray
-    through the surfaces before the stop and scale the input height so the ray
-    lands on the stop edge.
-    """
     scale = _height_at_stop_for_unit_input(pre)
     if scale == 0.0:
         return math.inf
@@ -73,10 +63,6 @@ def launch_parallel(
     pupil_z: float = 0.0,
     z_start: float = -20.0,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Collimated bundle from infinity: rays cross z=pupil_z at the given (x_p, y_p).
-
-    z_start is the launch plane (must be in front of the first surface).
-    """
     if field_axis == "y":
         dx, dy = 0.0, math.sin(field_angle_rad)
     elif field_axis == "x":
@@ -93,7 +79,6 @@ def launch_parallel(
         raise ValueError(f"pupil_xy must be shape (N, 2), got {pupil_xy.shape}")
     n = pupil_xy.shape[0]
 
-    # Back-translate the launch position so the ray crosses pupil_z at (x_p, y_p).
     dt = (z_start - pupil_z) / dz
     pos = np.empty((n, 3), dtype=float)
     pos[:, 0] = pupil_xy[:, 0] + dt * dx

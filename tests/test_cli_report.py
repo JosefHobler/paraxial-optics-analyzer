@@ -36,7 +36,7 @@ def test_cli_report_writes_pdf(tmp_path: Path, capsys):
 
 
 def test_write_png_report_direct(tmp_path: Path):
-    """write_report is the library-facing entry — keep covering it directly."""
+    """write_report is the library-facing entry"""
     prescription = load_prescription("examples/singlet_bk7.yaml")
     out = tmp_path / "report.png"
 

@@ -59,7 +59,7 @@ class TestCli:
 
     def test_no_subcommand_errors(self):
         with pytest.raises(SystemExit):
-            main([])  # argparse: a subcommand is required
+            main([]) 
 
     def test_version_flag(self, capsys):
         with pytest.raises(SystemExit) as exc:

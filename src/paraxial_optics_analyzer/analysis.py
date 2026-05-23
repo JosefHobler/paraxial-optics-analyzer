@@ -1,4 +1,4 @@
-"""Image-quality analyses: spot diagram, ray fan, best-focus search."""
+"""Image-quality analyses: spot diagram, ray fan, best-focus search"""
 from __future__ import annotations
 
 import math
@@ -82,7 +82,6 @@ def ray_fan(
     n_samples: int = 41,
     image_plane_offset: float = 0.0,
 ) -> RayFan:
-    """Transverse aberration along one pupil meridian, chief-ray referenced."""
     if axis == "tangential":
         pupil = linear_pupil(n_samples, pupil_radius_of(pre), axis="y")
         comp = 1
@@ -124,15 +123,8 @@ def find_best_focus(
     search_range: tuple[float, float] | None = None,
     tol: float = 1e-7,
 ) -> BestFocusResult:
-    """Search for the image-plane offset minimizing RMS spot.
-
-    Default search range is +/-10% of the paraxial EFL around the paraxial
-    focus, not around the nominal image plane. A coarse grid brackets the best
-    local basin before golden-section polishing, so narrow minima near paraxial
-    focus are not discarded by the unimodality assumption.
-    """
-    from paraxial_optics_analyzer.paraxial import trace_paraxial  # avoid cycle
-
+    from paraxial_optics_analyzer.paraxial import trace_paraxial 
+    
     para = trace_paraxial(pre)
     paraxial_offset = _paraxial_focus_offset(pre, para.image_distance)
 

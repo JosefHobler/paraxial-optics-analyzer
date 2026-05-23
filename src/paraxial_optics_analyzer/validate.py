@@ -1,9 +1,3 @@
-"""Self-checks the user can run from the CLI. Each one is a tiny end-to-end
-physics validation, not just a unit test.
-
-Prescriptions are constructed inline rather than loaded from disk, so these
-checks work the same way for editable installs and wheel installs.
-"""
 from __future__ import annotations
 
 import math
@@ -17,7 +11,7 @@ from paraxial_optics_analyzer.paraxial import (
     trace_paraxial,
 )
 from paraxial_optics_analyzer.prescription import ObjectSpec, Prescription, Surface
-from paraxial_optics_analyzer.raytrace import image_plane_z, trace_system
+from paraxial_optics_analyzer.raytrace impo rt image_plane_z, trace_system
 
 _BK7_R1 = 50.0
 _BK7_R2 = math.inf
@@ -29,7 +23,7 @@ _BK7_T = 5.0
 class CheckResult:
     name: str
     passed: bool
-    metric: str   # short description, e.g. "relative error"
+    metric: str   
     value: float
     threshold: float
 
@@ -54,7 +48,6 @@ def _bk7_singlet(*, semi_d: float = 12.0) -> Prescription:
 
 
 def _cooke_triplet() -> Prescription:
-    """Cooke-style triplet — mirrors examples/singlet_bk7.yaml."""
     return Prescription(
         name="cooke-triplet",
         wavelength_um=0.5876,
@@ -73,7 +66,6 @@ def _cooke_triplet() -> Prescription:
 
 
 def check_lensmaker(threshold: float = 1e-10) -> CheckResult:
-    """Paraxial trace EFL vs the thick-lens lensmaker equation."""
     pre = _bk7_singlet()
     f_trace = trace_paraxial(pre).efl
     f_lens = lensmaker_thick(_BK7_R1, _BK7_R2, _BK7_N, _BK7_T)
@@ -89,7 +81,7 @@ def check_lensmaker(threshold: float = 1e-10) -> CheckResult:
 
 def check_paraxial_limit(threshold: float = 1e-7) -> CheckResult:
     """Small-aperture real trace must land at the paraxial focus (spherical
-    aberration ~ y³)."""
+    aberration = approx. y to the third power)."""
     pre = _bk7_singlet()
     para = trace_paraxial(pre)
     z_img = image_plane_z(pre)
@@ -115,11 +107,6 @@ def check_paraxial_limit(threshold: float = 1e-7) -> CheckResult:
 
 
 def check_cooke_triplet(threshold: float = 1e-10) -> CheckResult:
-    """Cooke triplet: direct paraxial trace EFL vs ABCD-matrix EFL must agree.
-
-    Two independent code paths over a multi-element system — a stronger
-    cross-check than the singlet ones above.
-    """
     pre = _cooke_triplet()
     f_trace = trace_paraxial(pre).efl
     f_matrix = efl_from_matrix(pre)

@@ -1,4 +1,3 @@
-"""CLI entry point — subcommand-based interface (argparse)."""
 from __future__ import annotations
 
 import argparse
@@ -16,23 +15,20 @@ from paraxial_optics_analyzer.report import write_report
 from paraxial_optics_analyzer.validate import run_all as run_validation
 
 _DESCRIPTION = (
-    "Paraxial optics analyzer — sequential ray tracing for centered lens systems."
+    "Paraxial optics analyzer (sequential ray tracing for centered lens systems)"
 )
 
-_EPILOG = """\
+_EPILOG = """\ 
 examples:
   analyze info examples/singlet_bk7.yaml
   analyze info examples/singlet_bk7.yaml --field-angle-deg 5
   analyze report examples/singlet_bk7.yaml -o cooke.pdf
   analyze validate
 
-run `analyze <command> --help` for command-specific options.
+run `analyze <command> --help` for options.
 """
 
 _TRACE_HINT = "lower --field-angle-deg or widen the aperture (semi_diameter)"
-
-
-# --- parser ---
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -103,9 +99,6 @@ def _add_analysis_args(p: argparse.ArgumentParser) -> None:
     )
 
 
-# --- helpers ---
-
-
 def _fail(msg: str, *, hint: str | None = None, code: int = 1) -> int:
     print(f"error: {msg}", file=sys.stderr)
     if hint:
@@ -118,9 +111,6 @@ def _load(path_str: str) -> Prescription | int:
         return load_prescription(Path(path_str))
     except PrescriptionError as e:
         return _fail(str(e), code=2)
-
-
-# --- commands ---
 
 
 def _cmd_info(args: argparse.Namespace) -> int:
@@ -140,17 +130,12 @@ def _cmd_info(args: argparse.Namespace) -> int:
     except ValueError as e:
         return _fail(str(e), hint=_TRACE_HINT, code=2)
 
-    # Three reference planes along z:
-    #   nominal  — image plane defined by the YAML (sum of surface thicknesses)
-    #   paraxial — last-surface vertex + paraxial image distance
-    #   best    — minimum-RMS plane found by the search
     z_nominal = image_plane_z(pre)
     z_last = z_nominal - pre.surfaces[-1].thickness
     z_paraxial = z_last + para.image_distance
     z_best = z_nominal + best.image_plane_offset
 
-    # RMS at each plane (use the same sampling density as everything else for
-    # consistency in the report).
+    # RMS at each plane (use the same sampling density as everything else for consistency in the report).
     spot_par = spot_diagram(
         pre, field_angle_rad=fa, n_rings=args.rings,
         image_plane_offset=z_paraxial - z_nominal,

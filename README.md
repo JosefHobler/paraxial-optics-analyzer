@@ -1,48 +1,50 @@
 # Paraxial Optics Analyzer
 
-[![CI](https://github.com/JosefHobler/paraxial-optics-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/JosefHobler/paraxial-optics-analyzer/actions/workflows/ci.yml)
+Scriptable sequential ray-tracing and image-quality analysis for centered spherical optical systems (a small open-source analogue of one Zemax-style workflow)
 
-Scriptable sequential ray tracing & image-quality analysis for centered spherical lens systems — a tiny open-source Zemax-style tool.
+Small Python project that reads a YAML lens prescription, traces paraxial and real rays through centered spherical optics, and generates first-order image-quality numbers plus a visual report.
 
-Two independent paraxial implementations (direct refraction-transfer trace + ABCD matrix) cross-validate against the thick-lens lensmaker equation. The real (non-paraxial) trace converges to the paraxial prediction in the small-aperture limit at ~1e-9.
+Built-in validation currently passes:
 
-![Cooke triplet analysis: paraxial summary, spot diagram, tangential/sagittal ray fan, and best-focus search.](docs/demo_report.png)
+- lensmaker validation: relative error `< 1e-15`
+- paraxial-limit validation: max deviation `1.2e-13`
+- Cooke triplet EFL check: relative error `3.9e-16`
 
-## Features
+![Demo: YAML lens prescription to optical report and validation](./demo.gif)
 
-- **Paraxial analysis** — direct refraction-transfer trace and ABCD-matrix readouts that agree to ~1e-13, validated against the thick-lens lensmaker equation.
-- **Real ray tracing** — sequential trace through centered spheres + planes using vector Snell's law, with reversibility and total-internal-reflection handling.
-- **Image quality** — hexapolar spot diagrams, tangential / sagittal ray fans referenced to the chief ray, golden-section best-focus search.
-- **4-panel report** — matplotlib PDF/PNG (summary, spot, ray fan, focus-search curve).
-- **YAML prescriptions** — Zemax-style row table; structural + semantic validation on load.
-- **Pro CLI** — argparse subcommands (`info`, `report`, `validate`), per-command `--help`, `--version`, structured exit codes, one-line error messages with hints (no tracebacks on user errors).
-- **Built-in physics self-checks** — `analyze validate` runs three end-to-end cross-validations from the command line.
-- **CI gate** — every push runs ruff, the 103-test pytest suite on Python 3.10/3.11/3.12, the physics self-checks, and a wheel build smoke-tested in a clean venv.
+## Example Output
 
-## Install
+The input is a small lens prescription in YAML:
 
-Requires Python ≥ 3.10. Runtime deps: `numpy`, `matplotlib`, `pyyaml`.
+```yaml
+name: Cooke triplet style example
+wavelength_um: 0.5876
+units: mm
+
+object:
+  distance: .inf
+  height: 0.0
+
+surfaces:
+  - { radius: 26.0, thickness: 4.0, n: 1.6116, semi_diameter: 8.85 }
+  - { radius: -48.0, thickness: 6.0, n: 1.0, semi_diameter: 8.25 }
+  - { radius: -32.0, thickness: 2.0, n: 1.6040, semi_diameter: 6.0 }
+  - { radius: 22.0, thickness: 8.0, n: 1.0, semi_diameter: 6.0 }
+  - { radius: 45.0, thickness: 3.5, n: 1.5168, semi_diameter: 8.0 }
+  - { radius: -65.0, thickness: 42.66, n: 1.0, semi_diameter: 8.0 }
+
+stop: 3
+```
+
+Run the analysis:
 
 ```bash
-pip install -e ".[dev]"
+analyze info examples/cooke_triplet.yaml
 ```
 
-Or via the task runner:
+Current output:
 
-```bash
-make install
-```
-
-## Quick demo
-
-```bash
-make demo
-```
-
-Output:
-
-```
->>> Running analysis on examples/singlet_bk7.yaml
+```text
 Cooke triplet style example
   EFL: 54.1813925245 mm
   BFL: 38.8823263606 mm
@@ -56,57 +58,218 @@ Cooke triplet style example
   RMS spot at nominal:     0.705092 mm
   RMS spot at paraxial:    0.044284 mm
   RMS spot at best focus:  0.035734 mm
+```
 
->>> Built-in self-checks
+Generate a report:
+
+```bash
+analyze report examples/cooke_triplet.yaml -o cooke_report.png
+```
+
+The report contains a summary, spot diagram, tangential/sagittal ray fan, and best-focus RMS curve.
+
+![Generated optical report](./pdf_output_image.png)
+
+## Engineering Checks
+
+The project is intentionally small enough that the numbers can be checked against independent paths.
+
+Current built-in checks include:
+
+- BK7 singlet paraxial EFL against the thick-lens lensmaker equation
+- direct paraxial trace against an independent ABCD matrix calculation
+- real vector-Snell ray trace converging to the paraxial result in the small-aperture limit
+- Cooke-triplet internal-stop f-number regression, where the correct value depends on entrance-pupil diameter rather than raw stop diameter
+- best-focus search regression for a case where the nominal image plane is far from the paraxial focus
+
+Run:
+
+```bash
+analyze validate
+```
+
+Current output:
+
+```text
 Lensmaker validation: PASS, relative error < 1e-15
 Paraxial-limit validation: PASS, max deviation 1.2e-13
 Cooke triplet EFL check: PASS, relative error 3.9e-16
 ```
 
-The three explicit `z` lines remove any ambiguity about what "best-focus shift" is measured against. RMS spots are reported at all three reference planes so the third-order-SA identities (`RMS_paraxial ≈ |TA_max|/2`, `RMS_best ≈ |TA_max|/6`, `shift ≈ −(2/3)·LSA`) line up with what you'd compute by hand — see [`tests/test_analysis.py::TestSphericalAberrationConvergence`](tests/test_analysis.py).
+## Scope
 
-## CLI
+This is not a replacement for Zemax or any professional optical-design tool. It deliberately excludes tolerancing, optimization, aspheres, tilts, decenters, diffraction, coating effects, polarization, and full glass catalogs.
 
-Three subcommands. Run `analyze --help` for the top-level overview, `analyze <command> --help` for command-specific options.
+Works:
+
+- rotationally symmetric sequential systems
+- spherical surfaces
+- plane surfaces, written as `.inf` radius
+- air object space, `n = 1.0`
+- arbitrary refractive index per surface, supplied directly as `n`
+- object at infinity
+- finite object distance in the paraxial calculation
+- axial and off-axis collimated bundles through `--field-angle-deg`
+- paraxial EFL, BFL, image distance, and f-number
+- ABCD matrix in reduced-angle convention
+- thick-lens lensmaker helper for a singlet
+- real non-paraxial trace through all surfaces
+- vector Snell refraction
+- TIR detection
+- spot diagrams
+- tangential and sagittal ray fans
+- best-focus search by RMS spot radius
+- PDF/PNG report using matplotlib
+- YAML prescription files
+- command line interface
+- direct Python API
+- CI with lint, tests, validation, wheel build, and wheel smoke test
+
+Deliberate simplifications:
+
+- no aspheres
+- no tilts or decenters
+- no mirrors
+- no GRIN media
+- no wavelength-dependent glass catalog; `wavelength_um` is metadata right now
+- no dispersion/chromatic analysis
+- no optimization
+- no tolerancing
+- no diffraction, MTF, PSF, OPD, or wavefront output
+- no coatings, Fresnel losses, polarization, or ghost analysis
+- no obscurations
+- no vignetting model beyond rays failing when they miss geometry or hit TIR
+- surface `semi_diameter` is validated, but the real tracer does not currently clip each surface by semi-diameter
+- entrance pupil is paraxial and axial; good enough for current tests, not a full pupil solver for arbitrary fields
+- finite object height exists in the schema, but the analysis tools mostly use field angle / collimated input
+
+## Install
+
+Python requirement: `>=3.10`.
+
+Runtime dependencies:
+
+- `numpy`
+- `matplotlib`
+- `pyyaml`
+
+Dev dependencies:
+
+- `pytest`
+- `pytest-cov`
+- `ruff`
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -e ".[dev]"
+```
+
+Git Bash / Linux / macOS:
 
 ```bash
-analyze info examples/singlet_bk7.yaml                   # numeric results
-analyze info examples/singlet_bk7.yaml --field-angle-deg 5
-analyze report examples/singlet_bk7.yaml -o cooke.pdf  # write PDF/PNG report
-analyze validate                                         # built-in self-checks
+python -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -e ".[dev]"
+```
+
+The installed console script is `analyze`.
+
+```bash
 analyze --version
 ```
 
-Top-level help:
+If `analyze` is not on PATH, run the CLI through Python:
 
-```
-$ analyze --help
-usage: analyze [-h] [--version] <command> ...
-
-Paraxial optics analyzer — sequential ray tracing for centered lens systems.
-
-options:
-  -h, --help  show this help message and exit
-  --version   show program's version number and exit
-
-commands:
-  <command>
-    info      print first-order properties and spot statistics
-    report    write a 4-panel PDF/PNG report
-    validate  run built-in physics self-checks
-
-examples:
-  analyze info examples/singlet_bk7.yaml
-  analyze info examples/singlet_bk7.yaml --field-angle-deg 5
-  analyze report examples/singlet_bk7.yaml -o cooke.pdf
-  analyze validate
+```bash
+.venv/Scripts/python -m paraxial_optics_analyzer.cli --version
 ```
 
-**Exit codes**: `0` ok, `2` bad input (prescription / args), `3` ray-trace failure (TIR, total vignetting, chief-ray failure). The CLI prints a one-line `error: ...` to stderr with a hint pointing at `--field-angle-deg` or aperture size — failures don't drop a traceback.
+or on Unix-like shells:
 
-## Prescription format
+```bash
+.venv/bin/python -m paraxial_optics_analyzer.cli --version
+```
 
-A prescription is a YAML file with object specification, an ordered list of surfaces, and an aperture stop:
+## Quick Start
+
+Analyze the bundled Cooke-triplet example:
+
+```bash
+analyze info examples/cooke_triplet.yaml
+```
+
+Generate a visual report:
+
+```bash
+analyze report examples/cooke_triplet.yaml -o cooke_report.png
+```
+
+Run built-in validation checks:
+
+```bash
+analyze validate
+```
+
+Run tests and lint locally:
+
+```bash
+pytest -q
+ruff check src tests
+```
+
+## CLI
+
+Top-level commands:
+
+```bash
+analyze info <prescription.yaml>
+analyze report <prescription.yaml>
+analyze validate
+analyze --version
+```
+
+`info` prints first-order properties and spot statistics:
+
+```bash
+analyze info examples/cooke_triplet.yaml
+analyze info examples/cooke_triplet.yaml --field-angle-deg 5
+analyze info examples/cooke_triplet.yaml --rings 24
+```
+
+`report` writes a 4-panel PDF/PNG:
+
+```bash
+analyze report examples/cooke_triplet.yaml -o cooke.pdf
+analyze report examples/cooke_triplet.yaml -o cooke.png
+analyze report examples/cooke_triplet.yaml --field-angle-deg 5 --rings 12
+```
+
+If `-o/--output` is omitted, report output defaults to:
+
+```text
+<prescription_stem>_report.pdf
+```
+
+Shared analysis flags:
+
+- `--field-angle-deg DEG`: field angle in degrees. Default `0.0`.
+- `--rings N`: hexapolar pupil rings. CLI default `16`. Lower is faster; higher gives better RMS convergence.
+
+Exit codes:
+
+- `0`: ok
+- `1`: validation command found failed checks
+- `2`: bad prescription or bad CLI argument
+- `3`: ray trace failure, usually TIR, total failed bundle, or impossible ray
+
+User-facing errors are intended to be one-line `error: ...` messages, not Python tracebacks.
+
+## YAML Prescription Format
+
+Minimal singlet:
 
 ```yaml
 name: Plano-convex singlet (BK7)
@@ -114,124 +277,281 @@ wavelength_um: 0.5876
 units: mm
 
 object:
-  distance: .inf # +inf for collimated input; finite for object at distance
+  distance: .inf
   height: 0.0
 
 surfaces:
-  - { radius: 50.0, thickness: 5.0, n: 1.5168, semi_diameter: 12.0 }
-  - { radius: .inf, thickness: 91.75, n: 1.0, semi_diameter: 12.0 }
+  - { radius: 50.0, thickness: 5.0, n: 1.5168, semi_diameter: 15.0 }
+  - { radius: .inf, thickness: 91.75, n: 1.0, semi_diameter: 15.0 }
 
-stop: 1 # 1-indexed surface number serving as the aperture stop
+stop: 1
 ```
 
-Per surface:
+Top-level required keys:
 
-- `radius` — signed radius of curvature, `±inf` for plano. Positive when the centre of curvature lies downstream of the surface.
-- `thickness` — axial distance to the next surface, `≥0` (zero allowed for cemented surfaces).
-- `n` — refractive index of the medium _after_ this surface, `≥1`.
-- `semi_diameter` — clear-aperture half-width, `>0`.
+- `name`
+- `wavelength_um`
+- `units`
+- `object`
+- `surfaces`
 
-Validation runs on load — bad units, NaN, negative thickness, radius=0, booleans coerced as numbers, missing keys, etc. raise `PrescriptionError` with a precise message about _which_ surface and _which_ field.
+Top-level optional key:
 
-See [`examples/singlet_bk7.yaml`](examples/singlet_bk7.yaml) and [`examples/singlet_bk7.yaml`](examples/singlet_bk7.yaml).
+- `stop`, defaults to `1`
 
-## Validation strategy
+Accepted `units` values:
 
-Three layers of cross-validation make this more than a unit-tested toy:
+- `mm`
+- `cm`
+- `m`
+- `inch`
 
-1. **Lensmaker ↔ paraxial trace.** Direct refraction-transfer trace of `(y=1, u=0)` through every surface; EFL read off the output slope. Must match the closed-form thick-lens lensmaker equation `1/f = (n-1)·(1/R₁ - 1/R₂ + (n-1)·d/(n·R₁·R₂))` to machine precision (~1e-13).
-2. **Direct trace ↔ ABCD matrix.** Independent code path accumulating a 2×2 ABCD matrix in the reduced-angle `[y, n·u]` convention; EFL/BFL read off the matrix as `-n_last/C` and `-A·n_last/C`. Must match the direct trace to ~1e-13.
-3. **Real trace → paraxial focus.** Vector-Snell trace at small pupil heights converges on the paraxial focus with the residual scaling like y³ (third-order spherical aberration). At y = 1e-3 the residual is < 1e-9 — the headline real-vs-paraxial claim.
+`object` keys:
 
-`analyze validate` exposes these as a user-facing CLI command:
+- `distance`: required. Must be positive or infinity.
+- `height`: optional, defaults to `0.0`. Must be non-negative.
 
+Each surface requires:
+
+- `radius`: signed radius of curvature. Use `.inf` for a plane.
+- `thickness`: axial distance to the next surface. Must be finite and `>= 0`.
+- `n`: refractive index of the medium after the surface. Must be finite and `>= 1`.
+- `semi_diameter`: clear-aperture half-width. Must be finite and `> 0`.
+
+Infinity tokens accepted by the YAML loader:
+
+- `.inf`
+- `+.inf`
+- `inf`
+- `+inf`
+- `infinity`
+- `+infinity`
+- `-.inf`
+- `-inf`
+- `-infinity`
+
+Bundled examples:
+
+- `examples/singlet_bk7.yaml`
+- `examples/cooke_triplet.yaml`
+
+## Coordinate And Sign Conventions
+
+- Optical axis is `+z`.
+- Surface vertices are placed sequentially along `z`.
+- First surface vertex is at `z = 0`.
+- `surface_vertex_z(pre)` returns all surface vertex positions.
+- `image_plane_z(pre)` is the sum of all surface thicknesses.
+- Radius is signed.
+- Positive radius means the center of curvature is downstream of the vertex.
+- Plane surfaces are represented by infinite radius.
+- BFL is measured from the last surface vertex to the rear focal point.
+- EFL is positive for a converging system.
+- Field angle is in the tangential `y-z` meridian by default.
+- Sagittal fan samples along `x`.
+- Object-space refractive index is fixed at `1.0`.
+- ABCD matrices use the reduced-angle state `[y, n*u]`.
+
+## Architecture
+
+```text
+lens.yaml
+   |
+   v
+[parser / validation]
+   |
+   v
+[Prescription dataclass]
+   |
+   +--> [paraxial core] ----> EFL / BFL / f-number / image distance
+   |
+   +--> [real-ray core] ----> spot diagram / ray fan / best focus
+   |
+   +--> [report writer] ---> PDF / PNG report
 ```
-Lensmaker validation: PASS, relative error < 1e-15
-Paraxial-limit validation: PASS, max deviation 1.2e-13
-Cooke triplet EFL check: PASS, relative error 3.9e-16
-```
 
-CI runs the same checks on every push, so numerical drift past the project thresholds breaks the build.
+The computational core has no CLI or file-output dependency. YAML loading, command-line handling, and report writing are kept outside the lower-level physics routines.
 
-## Make targets
+## Tests
 
-| target          | what it does                                                      |
-| --------------- | ----------------------------------------------------------------- |
-| `make install`  | editable install with dev deps (pytest, ruff)                     |
-| `make test`     | run the pytest suite                                              |
-| `make demo`     | run the headline analysis + built-in self-checks                  |
-| `make report`   | write a 4-panel PDF report (summary, spot, ray fan, focus search) |
-| `make lint`     | static checks with ruff                                           |
-| `make validate` | only the physics self-checks                                      |
-| `make clean`    | drop `__pycache__`, `*.egg-info`, `.pytest_cache`, `.ruff_cache`  |
-
-Pick a different prescription with `EXAMPLE=`:
+Run:
 
 ```bash
-make report EXAMPLE=examples/singlet_bk7.yaml REPORT=cooke.pdf
+pytest -q
+ruff check src tests
+analyze validate
 ```
 
-## Continuous integration
+Current local count: 110 tests.
 
-Every push and pull request kicks off [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Three jobs run, with the build job gated on the first two:
+Test files:
 
-- **lint** — `ruff check src tests` (`E`/`F`/`W`/`I`/`UP`/`B` rules, line-length 100).
-- **tests** _(matrix)_ — full pytest suite on Python 3.10, 3.11, and 3.12, followed by `analyze validate`. The explicit validate step puts the physics cross-checks on the CI log so any drift past ~1e-9 immediately fails the build.
-- **build wheel** — builds `sdist` + `wheel`, installs the wheel into a fresh venv, runs `analyze --version` and `analyze validate` against it, and uploads `dist/` as a 7-day downloadable artefact.
+- `test_prescription.py`: dataclass validation and frozen-ness
+- `test_io.py`: YAML loader, required keys, type coercion, infinity parsing, bool rejection
+- `test_paraxial.py`: lensmaker, ABCD/direct agreement, Gaussian imaging, f-number
+- `test_raytrace.py`: sphere intersections, normals, vector Snell, TIR, full trace
+- `test_sampling.py`: hexapolar counts, linear pupil, launch geometry, entrance pupil
+- `test_analysis.py`: spots, fans, best focus, spherical aberration convergence
+- `test_cli_report.py`: CLI info/report/error paths and report file writing
+- `test_validate.py`: validation checks and validate CLI command
 
-Concurrent runs on the same branch are cancelled automatically so only the latest commit's status counts. Pip caches across runs for a second-run install in seconds.
+Some tests are physics tests, not just code-shape tests:
 
-## Testing
+- BK7 singlet EFL against thick-lens lensmaker
+- direct paraxial trace against ABCD matrix
+- real trace convergence to paraxial focus in the small-aperture limit
+- third-order spherical aberration relationships for an equiconvex singlet
+- Cooke triplet EFL regression
+- Cooke internal-stop entrance-pupil/f-number regression
+- Cooke best-focus search regression
 
-103 pytest tests across:
+## CI
 
-| file                   | what it covers                                                                |
-| ---------------------- | ----------------------------------------------------------------------------- |
-| `test_prescription.py` | dataclass validation (NaN, sign, range, frozen-ness)                          |
-| `test_io.py`           | YAML loader: required keys, type coercion, `.inf` parsing, bool rejection     |
-| `test_paraxial.py`     | lensmaker agreement, direct ↔ ABCD agreement, Gaussian imaging equation       |
-| `test_raytrace.py`     | vector Snell primitives, time-reversal symmetry, TIR, y³ convergence          |
-| `test_sampling.py`     | hexapolar count formula, linear sweep symmetry, launch geometry               |
-| `test_analysis.py`     | spot symmetry on-axis, ray-fan odd-function property, best-focus monotonicity |
-| `test_cli_report.py`   | CLI subcommand behaviour, error paths, PDF/PNG report generation              |
-| `test_validate.py`     | each self-check, formatter edge cases, CLI invocation of `validate`           |
+Workflow: `.github/workflows/ci.yml`.
 
-`tests/conftest.py` pins matplotlib to the non-interactive `Agg` backend so report tests run headlessly on any OS.
+Runs on:
 
-## Project layout
+- push to `main` or `master`
+- pull request to `main` or `master`
+- manual dispatch
 
+Jobs:
+
+- `ruff` on Python 3.12
+- tests on Python 3.10, 3.11, 3.12
+- `analyze validate` after tests
+- build `sdist` and wheel
+- install the wheel into a clean environment
+- run `analyze --version`
+- run `analyze validate`
+
+The workflow cancels older in-progress runs on the same branch/PR.
+
+## Makefile
+
+The Makefile is just a convenience wrapper.
+
+Defaults:
+
+```make
+PYTHON  := .venv/Scripts/python
+EXAMPLE ?= examples/singlet_bk7.yaml
+REPORT  ?= singlet_report.pdf
 ```
+
+Targets:
+
+```text
+make install    editable install with dev deps
+make test       pytest -q
+make demo       analyze info $(EXAMPLE), then validate
+make report     write $(REPORT) for $(EXAMPLE)
+make lint       ruff check src tests
+make validate   run built-in physics checks
+make clean      remove caches/build/dist/egg-info-ish files
+```
+
+Examples:
+
+```bash
+make demo
+make demo EXAMPLE=examples/cooke_triplet.yaml
+make report EXAMPLE=examples/cooke_triplet.yaml REPORT=cooke.pdf
+```
+
+The Makefile is Windows-venv flavored and uses `.venv/Scripts/python`. Windows does not ship `make`; use the raw Python commands if `make` is missing.
+
+## Repository Layout
+
+```text
 .
-├── .github/workflows/ci.yml      # CI: lint + tests (py3.10-3.12) + wheel build
-├── examples/
-│   ├── singlet_bk7.yaml          # plano-convex BK7 singlet (headline example)
-│   └── singlet_bk7.yaml        # 3-element Cooke-style triplet
-├── src/paraxial_optics_analyzer/
-│   ├── __init__.py
-│   ├── analysis.py               # spot diagram, ray fan, best-focus search
-│   ├── cli.py                    # argparse subcommands: info / report / validate
-│   ├── io.py                     # YAML loader + dict coercion
-│   ├── paraxial.py               # direct trace + ABCD matrix + lensmaker eq
-│   ├── prescription.py           # frozen-dataclass schema + validation
-│   ├── raytrace.py               # vector Snell, sequential trace
-│   ├── report.py                 # 4-panel matplotlib PDF/PNG
-│   ├── sampling.py               # hexapolar pupil + parallel-bundle launches
-│   └── validate.py               # built-in physics self-checks
-├── tests/                        # 103 pytest tests + conftest.py
-├── Makefile
-├── pyproject.toml                # PEP 621 metadata, ruff + pytest config
-├── LICENSE
-└── README.md
+  .github/workflows/ci.yml
+  docs/
+    demo.tape
+    demo_report.png
+  examples/
+    singlet_bk7.yaml
+    cooke_triplet.yaml
+  src/paraxial_optics_analyzer/
+    __init__.py
+    analysis.py
+    cli.py
+    io.py
+    paraxial.py
+    prescription.py
+    raytrace.py
+    report.py
+    sampling.py
+    validate.py
+  tests/
+    conftest.py
+    test_analysis.py
+    test_cli_report.py
+    test_io.py
+    test_paraxial.py
+    test_prescription.py
+    test_raytrace.py
+    test_sampling.py
+    test_validate.py
+  Makefile
+  pyproject.toml
+  LICENSE
+  README.md
 ```
 
-## Sign & coordinate conventions
+Generated stuff such as `build/`, `dist/`, `*.egg-info`, `__pycache__/`, `.pytest_cache/`, and `.ruff_cache/` is not part of the source. The Makefile has a `clean` target for most of that.
 
-- `+z` is the optical axis, pointing from object to image.
-- Surface radius is **signed**: positive when the centre of curvature lies downstream of the surface vertex; `±inf` denotes a plane.
-- ABCD matrix is in the **reduced-angle** convention — state vector is `[y, n·u]`. For a centered system bounded by index `n_in` in object space and `n_out` in image space, `det(M) = n_in / n_out`, which is `1` for the common air-to-air case.
-- EFL is positive for a converging system. BFL is signed from the last surface vertex to the rear focal point.
-- Field angle is measured from the optical axis in the tangential (y-z) meridian by default; sagittal sampling is along x.
+## Packaging
 
-## License
+Build backend:
 
-MIT — see [`LICENSE`](LICENSE).
+```text
+setuptools.build_meta
+```
+
+Build command:
+
+```bash
+python -m build
+```
+
+Project metadata is in `pyproject.toml`.
+
+The package name is:
+
+```text
+paraxial-optics-analyzer
+```
+
+The import package is:
+
+```python
+paraxial_optics_analyzer
+```
+
+The console script is:
+
+```text
+analyze
+```
+
+Current build emits setuptools deprecation warnings for the old license table / classifier style. The build still succeeds. This should be cleaned up before setuptools starts enforcing the new license metadata rules.
+
+## Bugs Caught During Validation
+
+Internal stop f-number:
+
+- Wrong behavior: `f/# = EFL / stop_diameter`
+- Correct behavior: `f/# = EFL / entrance_pupil_diameter`
+- This matters for `examples/cooke_triplet.yaml`, where the stop is at surface 3.
+
+Best focus:
+
+- Wrong behavior: search could miss paraxial focus when nominal image plane was far away.
+- Correct behavior: default search is centered around paraxial focus, grid bracketed, then polished.
+
+Test fixture drift:
+
+- Several tests once loaded the singlet YAML while asserting Cooke behavior.
+- If CI fails with an obvious title/surface-count mismatch, check fixture paths first.
+

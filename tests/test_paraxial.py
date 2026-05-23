@@ -91,12 +91,6 @@ class TestImageDistance:
         assert r.image_distance == pytest.approx(r.bfl, rel=1e-12, abs=1e-12)
 
     def test_gaussian_imaging_equation(self):
-        """For finite object distance, 1/s + 1/s' = 1/f (Gaussian formula) at the principal planes.
-
-        For a thin lens with object distance s in front, image distance s' behind,
-        and focal length f, the Gaussian equation holds exactly. We approximate
-        a thin lens by using a very small physical thickness.
-        """
         thin = _singlet(50.0, math.inf, 1.5168, 1e-6, obj_distance=300.0)
         r = trace_paraxial(thin)
         s = 300.0

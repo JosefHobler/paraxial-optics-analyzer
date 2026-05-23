@@ -19,7 +19,7 @@ class Surface:
     thickness: float
     n: float
     semi_diameter: float
-
+ 
     def __post_init__(self) -> None:
         r, t, n, sd = self.radius, self.thickness, self.n, self.semi_diameter
         if math.isnan(r):

@@ -1,4 +1,3 @@
-"""Matplotlib report for results"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -18,7 +17,7 @@ def write_report(
     *,
     field_angle_deg: float = 0.0,
     n_rings: int = 6,
-) -> Path:
+) -> Path: 
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
 

@@ -114,26 +114,8 @@ class TestBestFocus:
 
 
 class TestSphericalAberrationConvergence:
-    """For pure third-order spherical aberration over a uniform circular pupil:
-
-      RMS at paraxial focus      ≈ |TA_max| / 2
-      best-focus shift           ≈ -(2/3) * LSA_max
-      RMS at best focus          ≈ |TA_max| / 6
-
-    where TA_max is the marginal-ray transverse miss at the paraxial image
-    plane and LSA_max = TA_max / u_marginal is the longitudinal SA. These
-    identities are how third-order theory predicts the spot from any single
-    marginal-ray trace — a much stronger test of the sampler + best-focus
-    search than asserting "best <= nominal".
-    """
-
     @staticmethod
     def _equiconvex_singlet(semi_d: float = 12.5) -> Prescription:
-        """Equi-convex BK7 lens, ~f/4, f ≈ 100 mm in air.
-
-        Vertex thickness is large enough that the edge of surface 1 sits well
-        behind the vertex of surface 2 (sag(12.5) ≈ 0.76 mm at R ≈ 103.4 mm).
-        """
         n = 1.5168
         f_target = 100.0
         R = 2.0 * (n - 1.0) * f_target  # ≈ 103.36 mm
@@ -151,12 +133,6 @@ class TestSphericalAberrationConvergence:
 
     @staticmethod
     def _marginal_ta_at_paraxial(pre: Prescription) -> tuple[float, float, float]:
-        """Trace one marginal ray. Returns (TA_max, paraxial_offset, u_marginal).
-
-        TA_max is signed transverse miss at the paraxial focus; u_marginal is
-        the slope of the exit ray, which equals semi_diameter / EFL for a
-        collimated input.
-        """
         from paraxial_optics_analyzer.paraxial import trace_paraxial
         from paraxial_optics_analyzer.raytrace import image_plane_z, trace_system
         para = trace_paraxial(pre)
@@ -185,13 +161,6 @@ class TestSphericalAberrationConvergence:
         )
 
     def _focused_search(self, pre, paraxial_offset, width=5.0):
-        """Run find_best_focus with the search range centred on paraxial focus.
-
-        Default search range is ±10% of EFL around the *nominal* image plane;
-        when the nominal plane is far from paraxial focus (the YAML's
-        last-surface thickness is just a back-air distance, not the BFL),
-        the default window misses the real minimum entirely.
-        """
         return find_best_focus(
             pre, n_rings=24, tol=1e-7,
             search_range=(paraxial_offset - width, paraxial_offset + width),
@@ -201,8 +170,7 @@ class TestSphericalAberrationConvergence:
         pre = self._equiconvex_singlet()
         ta_max, paraxial_offset, u_marginal = self._marginal_ta_at_paraxial(pre)
         # For a converging lens with under-corrected SA (marginal focus *before*
-        # paraxial), best focus sits 2/3 of the way from paraxial toward marginal
-        # — always toward the lens, so the shift is negative.
+        # paraxial), best focus sits 2/3 of the way from paraxial toward marginal.
         lsa_magnitude = abs(ta_max) / u_marginal
         expected_shift = -(2.0 / 3.0) * lsa_magnitude
         fb = self._focused_search(pre, paraxial_offset)
@@ -224,12 +192,6 @@ class TestSphericalAberrationConvergence:
         )
 
     def test_low_ring_count_overestimates_rms(self):
-        """Documentation-as-test: hexapolar with too few rings inflates RMS.
-
-        N=4 over-estimates RMS at paraxial focus by ≥25% vs N=24. This is a
-        sampling property of equally-weighted hexapolar, not a bug. The CLI's
-        default N=16 is chosen to make this small in practice.
-        """
         pre = self._equiconvex_singlet()
         _, paraxial_offset, _ = self._marginal_ta_at_paraxial(pre)
         rms_coarse = spot_diagram(pre, n_rings=4, image_plane_offset=paraxial_offset).rms
