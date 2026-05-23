@@ -123,8 +123,8 @@ def find_best_focus(
     search_range: tuple[float, float] | None = None,
     tol: float = 1e-7,
 ) -> BestFocusResult:
-    from paraxial_optics_analyzer.paraxial import trace_paraxial 
-    
+    from paraxial_optics_analyzer.paraxial import trace_paraxial
+
     para = trace_paraxial(pre)
     paraxial_offset = _paraxial_focus_offset(pre, para.image_distance)
 

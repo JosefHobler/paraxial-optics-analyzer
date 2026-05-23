@@ -23,7 +23,7 @@ _BK7_T = 5.0
 class CheckResult:
     name: str
     passed: bool
-    metric: str   
+    metric: str
     value: float
     threshold: float
 
