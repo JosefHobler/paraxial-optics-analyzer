@@ -70,7 +70,7 @@ The report contains a summary, spot diagram, tangential/sagittal ray fan, and be
 
 <img width="1100" height="850" alt="demo_report" src="https://github.com/user-attachments/assets/d0c3b1b9-d58e-4ee4-bcee-0db63e85317d" />
 
-## Engineering Checks
+## Built-in Checks
 
 
 The project is intentionally small enough that the numbers can be checked against independent paths.
