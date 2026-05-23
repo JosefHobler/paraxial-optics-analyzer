@@ -10,7 +10,7 @@ Built-in validation currently passes:
 - paraxial-limit validation: max deviation `1.2e-13`
 - Cooke triplet EFL check: relative error `3.9e-16`
 
-![Demo: YAML lens prescription to optical report and validation](./demo.gif)
+https://github.com/user-attachments/assets/995828a9-2453-4f28-967f-809c66763304
 
 ## Example Output
 
@@ -68,9 +68,10 @@ analyze report examples/cooke_triplet.yaml -o cooke_report.png
 
 The report contains a summary, spot diagram, tangential/sagittal ray fan, and best-focus RMS curve.
 
-![Generated optical report](./pdf_output_image.png)
+<img width="1100" height="850" alt="demo_report" src="https://github.com/user-attachments/assets/d0c3b1b9-d58e-4ee4-bcee-0db63e85317d" />
 
 ## Engineering Checks
+
 
 The project is intentionally small enough that the numbers can be checked against independent paths.
 
