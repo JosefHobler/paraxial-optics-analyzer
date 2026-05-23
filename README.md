@@ -428,40 +428,6 @@ Jobs:
 
 The workflow cancels older in-progress runs on the same branch/PR.
 
-## Makefile
-
-The Makefile is just a convenience wrapper.
-
-Defaults:
-
-```make
-PYTHON  := .venv/Scripts/python
-EXAMPLE ?= examples/singlet_bk7.yaml
-REPORT  ?= singlet_report.pdf
-```
-
-Targets:
-
-```text
-make install    editable install with dev deps
-make test       pytest -q
-make demo       analyze info $(EXAMPLE), then validate
-make report     write $(REPORT) for $(EXAMPLE)
-make lint       ruff check src tests
-make validate   run built-in physics checks
-make clean      remove caches/build/dist/egg-info-ish files
-```
-
-Examples:
-
-```bash
-make demo
-make demo EXAMPLE=examples/cooke_triplet.yaml
-make report EXAMPLE=examples/cooke_triplet.yaml REPORT=cooke.pdf
-```
-
-The Makefile is Windows-venv flavored and uses `.venv/Scripts/python`. Windows does not ship `make`; use the raw Python commands if `make` is missing.
-
 ## Repository Layout
 
 ```text
